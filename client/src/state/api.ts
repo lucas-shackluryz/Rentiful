@@ -6,7 +6,9 @@ export const api = createApi({
   }),
   reducerPath: "api",
   tagTypes: [],
-  endpoints: (build) => ({}),
+  endpoints: (build) => ({
+    
+  }),
 });
 
 export const {} = api;
