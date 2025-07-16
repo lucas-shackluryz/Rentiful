@@ -26,7 +26,7 @@ export const api = createApi({
   }),
 
   reducerPath: "api",
-  tagTypes: ["Managers", "Tenants", "Properties"],
+  tagTypes: ["Managers", "Tenants", "Properties", "PropertyDetails"],
 
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
@@ -65,6 +65,16 @@ export const api = createApi({
     }),
 
     // tenant related endpoints
+    getTenant: build.query<Tenant, string>({
+      query: (cognitoId) => `tenants/${cognitoId}`,
+      providesTags: (result) => [{ type: "Tenants", id: result?.id }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to load tenant profile.",
+        });
+      },
+    }),
+
     updateTenantSettings: build.mutation<Tenant, { cognitoId: string } & Partial<Tenant>>({
       query: ({ cognitoId, ...updatedTenant }) => ({
         url: `tenants/${cognitoId}`,
@@ -76,6 +86,46 @@ export const api = createApi({
         await withToast(queryFulfilled, {
           success: "Settings updated successfully!",
           error: "Failed to update settings.",
+        });
+      },
+    }),
+
+    addFavoriteProperty: build.mutation<
+      Tenant,
+      { cognitoId: string; propertyId: number }
+    >({
+      query: ({ cognitoId, propertyId }) => ({
+        url: `tenants/${cognitoId}/favorites/${propertyId}`,
+        method: "POST",
+      }),
+      invalidatesTags: (result) => [
+        { type: "Tenants", id: result?.id },
+        { type: "Properties", id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Added to favorites!!",
+          error: "Failed to add to favorites",
+        });
+      },
+    }),
+
+    removeFavoriteProperty: build.mutation<
+      Tenant,
+      { cognitoId: string; propertyId: number }
+    >({
+      query: ({ cognitoId, propertyId }) => ({
+        url: `tenants/${cognitoId}/favorites/${propertyId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result) => [
+        { type: "Tenants", id: result?.id },
+        { type: "Properties", id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Removed from favorites!",
+          error: "Failed to remove from favorites.",
         });
       },
     }),
@@ -140,6 +190,45 @@ export const api = createApi({
         });
       },
     }),
+
+    // application related endpoints
+    getApplications: build.query<
+      Application[],
+      { userId?: string; userType?: string }
+    >({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params.userId) {
+          queryParams.append("userId", params.userId.toString());
+        }
+        if (params.userType) {
+          queryParams.append("userType", params.userType);
+        }
+
+        return `applications?${queryParams.toString()}`;
+      },
+      providesTags: ["Applications"],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to fetch applications.",
+        });
+      },
+    }),
+
+    createApplication: build.mutation<Application, Partial<Application>>({
+      query: (body) => ({
+        url: `applications`,
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: ["Applications"],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Application created successfully!",
+          error: "Failed to create applications.",
+        });
+      },
+    }),
     
   }),
 });
@@ -149,4 +238,10 @@ export const {
   useUpdateTenantSettingsMutation, 
   useUpdateManagerSettingsMutation,
   useGetPropertiesQuery,
+  useGetPropertyQuery,
+  useGetTenantQuery,
+  useAddFavoritePropertyMutation,
+  useRemoveFavoritePropertyMutation,
+  useGetApplicationsQuery,
+  useCreateApplicationMutation,
 } = api;
