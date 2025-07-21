@@ -26,7 +26,15 @@ export const api = createApi({
   }),
 
   reducerPath: "api",
-  tagTypes: ["Managers", "Tenants", "Properties", "PropertyDetails"],
+  tagTypes: [
+    "Managers",
+    "Tenants",
+    "Properties",
+    "PropertyDetails",
+    "Leases",
+    "Payments",
+    "Applications",
+  ],
 
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
@@ -163,6 +171,27 @@ export const api = createApi({
         },
     }),
 
+    // lease related enpoints
+    getLeases: build.query<Lease[], number>({
+      query: () => "leases",
+      providesTags: ["Leases"],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to fetch leases.",
+        });
+      },
+    }),
+
+    getPayments: build.query<Payment[], number>({
+      query: (leaseId) => `leases/${leaseId}/payments`,
+      providesTags: ["Payments"],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to fetch payment info.",
+        });
+      },
+    }),
+
     // property related endpoints
     getProperties: build.query<Property[], Partial<FiltersState> & { favoriteIds?: number[] }>({
       query: (filters) => {
@@ -260,6 +289,8 @@ export const {
   useGetTenantQuery,
   useAddFavoritePropertyMutation,
   useRemoveFavoritePropertyMutation,
+  useGetLeasesQuery,
+  useGetPaymentsQuery,
   useGetApplicationsQuery,
   useCreateApplicationMutation,
 } = api;
