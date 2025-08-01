@@ -1,12 +1,12 @@
 import { usePathname } from 'next/navigation';
-import React from 'react'
+import React from 'react';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from './ui/sidebar';
 import { Building, FileText, Heart, Home, Menu, Settings, X } from 'lucide-react';
 import { NAVBAR_HEIGHT } from '@/lib/constants';
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-const AppSidebar = ({ userType }: AppSidebarProp) => {
+const AppSidebar = ({ userType }: AppSidebarProps) => {
     const pathname = usePathname();
     const { toggleSidebar, open } = useSidebar();
 
